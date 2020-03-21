@@ -12,7 +12,7 @@ def init_weight(layer, initializer="he normal"):
 
 
 class ValueNetwork(nn.Module):
-    def __init__(self, n_states, n_hidden_filters):
+    def __init__(self, n_states, n_hidden_filters=256):
         super(ValueNetwork, self).__init__()
         self.n_states = n_states
         self.n_hidden_filters = n_hidden_filters
@@ -34,7 +34,7 @@ class ValueNetwork(nn.Module):
 
 
 class QvalueNetwork(nn.Module):
-    def __init__(self, n_states, n_actions, n_hidden_filters):
+    def __init__(self, n_states, n_actions, n_hidden_filters=256):
         super(QvalueNetwork, self).__init__()
         self.n_states = n_states
         self.n_hidden_filters = n_hidden_filters
@@ -58,7 +58,7 @@ class QvalueNetwork(nn.Module):
 
 
 class PolicyNetwork(nn.Module):
-    def __init__(self, n_states, n_actions, n_hidden_filters):
+    def __init__(self, n_states, n_actions, n_hidden_filters=256):
         super(PolicyNetwork, self).__init__()
         self.n_states = n_states
         self.n_hidden_filters = n_hidden_filters
@@ -90,7 +90,10 @@ class PolicyNetwork(nn.Module):
 
     def sample(self, states):
         dist = self(states)
-        #  reparameterization trick
+        # Reparameterization trick
         u = dist.rsample()
         action = torch.tanh(u)
         log_prob = Normal.log_prob(u)
+        # Enforcing action bounds
+        log_prob -= (torch.log(1 - action ** 2)).cumsum(dim=-1)
+        return action
