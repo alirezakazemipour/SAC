@@ -11,6 +11,9 @@ action_bounds = [test_env.action_space.high[0], test_env.action_space.low[0]]
 MAX_EPISODES = 100
 memory_size = 100
 batch_size = 256
+gamma = 0.99
+alpha = 0.2
+lr = 3e-4
 
 if __name__ == "__main__":
     print(f"Number of states:{n_states}\n"
@@ -21,7 +24,10 @@ if __name__ == "__main__":
     agent = SAC(n_states=n_states,
                 n_actions=n_actions,
                 memory_size=memory_size,
-                batch_size=batch_size)
+                batch_size=batch_size,
+                gamma=gamma,
+                alpha=alpha,
+                lr=lr)
 
     for episode in range(MAX_EPISODES):
         state = env.reset()
@@ -36,6 +42,3 @@ if __name__ == "__main__":
             if done:
                 break
             state = next_state
-
-
-

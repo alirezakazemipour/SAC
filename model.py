@@ -88,7 +88,7 @@ class PolicyNetwork(nn.Module):
         dist = Normal(mu, std)
         return dist
 
-    def sample(self, states):
+    def sample_or_likelihood(self, states):
         dist = self(states)
         # Reparameterization trick
         u = dist.rsample()
@@ -96,4 +96,4 @@ class PolicyNetwork(nn.Module):
         log_prob = Normal.log_prob(u)
         # Enforcing action bounds
         log_prob -= (torch.log(1 - action ** 2)).cumsum(dim=-1)
-        return action
+        return action, log_prob
