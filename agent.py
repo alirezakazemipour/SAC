@@ -56,7 +56,7 @@ class SAC:
 
     def train(self):
         if len(self.memory) < self.batch_size:
-            return 0
+            return 0, 0, 0
         else:
             batch = self.memory.sample(self.batch_size)
             states, rewards, dones, actions, next_states = self.unpack(batch)
@@ -97,8 +97,7 @@ class SAC:
 
             self.soft_update_target_network(self.value_network, self.value_target_network)
 
-
-
+            return value_loss.item(), q_loss.item(), policy_loss.item()
 
     def choose_action(self, states):
         states = np.expand_dims(states, axis=0)
@@ -106,5 +105,6 @@ class SAC:
         return action.detach().cpu().numpy()
 
     @staticmethod
-    def soft_update_target_network(local_network, target_network):
-        pass
+    def soft_update_target_network(local_network, target_network, tau=0.005):
+        for target_param, local_param in zip(target_network.parameters(), local_network.parameters()):
+            target_param.data.copy_(tau * local_param.data + (1 - tau) * target_param.data)
