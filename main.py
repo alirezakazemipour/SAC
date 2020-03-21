@@ -10,6 +10,7 @@ action_bounds = [test_env.action_space.high[0], test_env.action_space.low[0]]
 
 MAX_EPISODES = 100
 memory_size = 100
+batch_size = 256
 
 if __name__ == "__main__":
     print(f"Number of states:{n_states}\n"
@@ -17,7 +18,10 @@ if __name__ == "__main__":
           f"Action boundaries:{action_bounds}")
 
     env = gym.make(ENV_NAME)
-    agent = SAC(n_states=n_states, n_actions=n_actions)
+    agent = SAC(n_states=n_states,
+                n_actions=n_actions,
+                memory_size=memory_size,
+                batch_size=batch_size)
 
     for episode in range(MAX_EPISODES):
         state = env.reset()
@@ -28,7 +32,7 @@ if __name__ == "__main__":
             action = agent.choose_action(state)
             next_state, reward, done, _ = env.step(action)
             agent.store(state, reward, done, action, next_state)
-            agent.train()
+            loss = agent.train()
             if done:
                 break
             state = next_state
