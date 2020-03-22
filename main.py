@@ -13,7 +13,7 @@ n_actions = test_env.action_space.shape[0]
 action_bounds = [test_env.action_space.low[0], test_env.action_space.high[0]]
 
 MAX_EPISODES = 10000
-memory_size = 1e+5
+memory_size = 1e+6
 batch_size = 256
 gamma = 0.99
 alpha = 0.2
@@ -32,9 +32,6 @@ def log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, me
         global_running_reward = 0.99 * global_running_reward + 0.01 * episode_reward
 
     ram = psutil.virtual_memory()
-
-    if to_gb(ram.used) > 7:
-        exit(0)
 
     if episode % 50 == 0:
         print(f"EP:{episode}| "
