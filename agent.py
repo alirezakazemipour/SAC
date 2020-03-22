@@ -47,8 +47,8 @@ class SAC:
         batch = Transition(*zip(*batch))
 
         states = torch.cat(batch.state).view(self.batch_size, self.n_states).to(self.device)
-        rewards = torch.cat(batch.reward).to(self.device)
-        dones = torch.cat(batch.done).to(self.device)
+        rewards = torch.cat(batch.reward).view(self.batch_size, 1).to(self.device)
+        dones = torch.cat(batch.done).view(self.batch_size, 1).to(self.device)
         actions = torch.cat(batch.action).view(-1, 1).to(self.device)
         next_states = torch.cat(batch.state).view(self.batch_size, self.n_states).to(self.device)
 
@@ -74,14 +74,14 @@ class SAC:
             # Calculating the Q-Value target
             with torch.no_grad():
                 target_q = rewards + self.gamma * self.value_target_network(next_states) * (1 - dones)
-            q_loss = self.q_value_loss(q, target_value)
+            q_loss = self.q_value_loss(q, target_q)
 
             # Calculating the Policy target
             with torch.no_grad():
-                q1 = self.q_value_network1(states, actions)
-                q2 = self.q_value_network2(states, actions)
+                q1 = self.q_value_network1(states, reparam_action)
+                q2 = self.q_value_network2(states, reparam_action)
                 q = torch.min(q1, q2)
-            policy_loss = self.alpha * log_prob - q
+            policy_loss = self.alpha * (log_prob - q).mean()
 
             self.value_opt.zero_grad()
             value_loss.backward()
@@ -101,8 +101,9 @@ class SAC:
 
     def choose_action(self, states):
         states = np.expand_dims(states, axis=0)
+        states = from_numpy(states).float().to(self.device)
         action, _ = self.policy_network.sample_or_likelihood(states)
-        return action.detach().cpu().numpy()
+        return action.detach().cpu().numpy()[0]
 
     @staticmethod
     def soft_update_target_network(local_network, target_network, tau=0.005):

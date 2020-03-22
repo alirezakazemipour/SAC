@@ -11,7 +11,7 @@ n_actions = test_env.action_space.shape[0]
 action_bounds = [test_env.action_space.high[0], test_env.action_space.low[0]]
 
 MAX_EPISODES = 1000
-memory_size = 1000
+memory_size = 10000
 batch_size = 256
 gamma = 0.99
 alpha = 0.2
@@ -30,12 +30,12 @@ def log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss):
         global_running_reward = 0.99 * global_running_reward + 0.01 * reward
 
     print(f"EP:{episode}| "
-          f"EP_r:{episode_reward}| "
+          f"EP_r:{episode_reward:3.3f}| "
           f"EP_running_reward:{global_running_reward:3.3f}| "
           f"Value_Loss:{value_loss:3.3f}| "
           f"Q-Value_Loss:{q_loss:3.3f}| "
           f"Policy_Loss:{policy_loss:3.3f}| "
-          f"Duration:{time.time() - start_time:3.3f}|"
+          f"Duration:{time.time() - start_time:3.3f}| "
           f"{to_gb(ram.used):.1f}/{to_gb(ram.total):.1f} GB RAM")
 
 
