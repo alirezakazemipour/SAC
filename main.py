@@ -72,6 +72,8 @@ if __name__ == "__main__":
             next_state, reward, done, _ = env.step(action)
             agent.store(state, reward, done, action, next_state)
             value_loss, q_loss, policy_loss = agent.train()
+            if episode % 250 == 0:
+                agent.save_weights()
             if done:
                 break
             episode_reward += reward

@@ -76,7 +76,8 @@ class SAC:
 
             # Calculating the Q-Value target
             with torch.no_grad():
-                target_q = self.reward_scale * rewards + self.gamma * self.value_target_network(next_states) * (1 - dones)
+                target_q = self.reward_scale * rewards + self.gamma * self.value_target_network(next_states) * (
+                            1 - dones)
             q1 = self.q_value_network1(states, actions)
             q2 = self.q_value_network2(states, actions)
             q1_loss = self.q_value_loss(q1, target_q)
@@ -115,3 +116,6 @@ class SAC:
     def soft_update_target_network(local_network, target_network, tau=0.005):
         for target_param, local_param in zip(target_network.parameters(), local_network.parameters()):
             target_param.data.copy_(tau * local_param.data + (1 - tau) * target_param.data)
+
+    def save_weights(self):
+        torch.save(self.policy_network.state_dict(), "./weights.pth")
