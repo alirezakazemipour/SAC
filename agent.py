@@ -19,6 +19,7 @@ class SAC:
         self.memory = Memory(memory_size=self.memory_size)
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        # self.device = "cpu"
 
         self.policy_network = PolicyNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
         self.q_value_network1 = QvalueNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
@@ -32,8 +33,8 @@ class SAC:
         self.q_value_loss = torch.nn.MSELoss()
 
         self.value_opt = Adam(self.value_network.parameters(), lr=self.lr)
-        self.q_value_opt = Adam(list(self.q_value_network1.parameters()) + list(self.q_value_network2.parameters()),
-                                lr=self.lr)
+        self.q_value1_opt = Adam(self.q_value_network1.parameters(), lr=self.lr)
+        self.q_value2_opt = Adam(self.q_value_network2.parameters(),lr=self.lr)
         self.policy_opt = Adam(self.policy_network.parameters(), lr=self.lr)
 
     def store(self, state, reward, done, action, next_state):
@@ -63,11 +64,11 @@ class SAC:
             states, rewards, dones, actions, next_states = self.unpack(batch)
 
             # Calculating the value target
-            q1 = self.q_value_network1(states, actions)
-            q2 = self.q_value_network2(states, actions)
+            reparam_actions, log_probs = self.policy_network.sample_or_likelihood(states)
+            q1 = self.q_value_network1(states, reparam_actions)
+            q2 = self.q_value_network2(states, reparam_actions)
             q = torch.min(q1, q2)
-            reparam_action, log_prob = self.policy_network.sample_or_likelihood(states)
-            target_value = q.detach() - self.alpha * log_prob.detach()
+            target_value = q.detach() - self.alpha * log_probs.detach()
 
             value = self.value_network(states)
             value_loss = self.value_loss(value, target_value)
@@ -75,22 +76,24 @@ class SAC:
             # Calculating the Q-Value target
             with torch.no_grad():
                 target_q = rewards + self.gamma * self.value_target_network(next_states) * (1 - dones)
-            q_loss = self.q_value_loss(q, target_q)
+            q1 = self.q_value_network1(states, actions)
+            q2 = self.q_value_network2(states, actions)
+            q1_loss = self.q_value_loss(q1, target_q)
+            q2_loss = self.q_value_loss(q2, target_q)
 
-            # Calculating the Policy target
-            with torch.no_grad():
-                q1 = self.q_value_network1(states, reparam_action)
-                q2 = self.q_value_network2(states, reparam_action)
-                q = torch.min(q1, q2)
-            policy_loss = self.alpha * (log_prob - q).mean()
+            policy_loss = (self.alpha * log_probs - q).mean()
 
             self.value_opt.zero_grad()
             value_loss.backward()
             self.value_opt.step()
 
-            self.q_value_opt.zero_grad()
-            q_loss.backward()
-            self.q_value_opt.step()
+            self.q_value1_opt.zero_grad()
+            q1_loss.backward()
+            self.q_value1_opt.step()
+
+            self.q_value2_opt.zero_grad()
+            q2_loss.backward()
+            self.q_value2_opt.step()
 
             self.policy_opt.zero_grad()
             policy_loss.backward()
@@ -98,7 +101,7 @@ class SAC:
 
             self.soft_update_target_network(self.value_network, self.value_target_network)
 
-            return value_loss.item(), q_loss.item(), policy_loss.item()
+            return value_loss.item(), 0.5 * (q1_loss + q2_loss).item(), policy_loss.item()
 
     def choose_action(self, states):
         states = np.expand_dims(states, axis=0)

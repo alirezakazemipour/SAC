@@ -8,9 +8,9 @@ test_env = gym.make(ENV_NAME)
 
 n_states = test_env.observation_space.shape[0]
 n_actions = test_env.action_space.shape[0]
-action_bounds = [test_env.action_space.high[0], test_env.action_space.low[0]]
+action_bounds = [test_env.action_space.low[0], test_env.action_space.high[0]]
 
-MAX_EPISODES = 1000
+MAX_EPISODES = 10000
 memory_size = 1e+6
 batch_size = 256
 gamma = 0.99
