@@ -7,7 +7,7 @@ from torch.optim.adam import Adam
 
 
 class SAC:
-    def __init__(self, n_states, n_actions, memory_size, batch_size, gamma, alpha, lr, action_bounds):
+    def __init__(self, n_states, n_actions, memory_size, batch_size, gamma, alpha, lr, action_bounds, reward_scale):
         self.n_states = n_states
         self.n_actions = n_actions
         self.memory_size = memory_size
@@ -16,6 +16,7 @@ class SAC:
         self.alpha = alpha
         self.lr = lr
         self.action_bounds = action_bounds
+        self.reward_scale = reward_scale
         self.memory = Memory(memory_size=self.memory_size)
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -34,7 +35,7 @@ class SAC:
 
         self.value_opt = Adam(self.value_network.parameters(), lr=self.lr)
         self.q_value1_opt = Adam(self.q_value_network1.parameters(), lr=self.lr)
-        self.q_value2_opt = Adam(self.q_value_network2.parameters(),lr=self.lr)
+        self.q_value2_opt = Adam(self.q_value_network2.parameters(), lr=self.lr)
         self.policy_opt = Adam(self.policy_network.parameters(), lr=self.lr)
 
     def store(self, state, reward, done, action, next_state):
@@ -51,7 +52,7 @@ class SAC:
         states = torch.cat(batch.state).view(self.batch_size, self.n_states).to(self.device)
         rewards = torch.cat(batch.reward).view(self.batch_size, 1).to(self.device)
         dones = torch.cat(batch.done).view(self.batch_size, 1).to(self.device)
-        actions = torch.cat(batch.action).view(-1, 1).to(self.device)
+        actions = torch.cat(batch.action).view(-1, self.n_actions).to(self.device)
         next_states = torch.cat(batch.state).view(self.batch_size, self.n_states).to(self.device)
 
         return states, rewards, dones, actions, next_states
@@ -69,19 +70,21 @@ class SAC:
             q2 = self.q_value_network2(states, reparam_actions)
             q = torch.min(q1, q2)
             target_value = q.detach() - self.alpha * log_probs.detach()
+            # target_value = q.detach() - log_probs.detach()
 
             value = self.value_network(states)
             value_loss = self.value_loss(value, target_value)
 
             # Calculating the Q-Value target
             with torch.no_grad():
-                target_q = rewards + self.gamma * self.value_target_network(next_states) * (1 - dones)
+                target_q = self.reward_scale * rewards + self.gamma * self.value_target_network(next_states) * (1 - dones)
             q1 = self.q_value_network1(states, actions)
             q2 = self.q_value_network2(states, actions)
             q1_loss = self.q_value_loss(q1, target_q)
             q2_loss = self.q_value_loss(q2, target_q)
 
             policy_loss = (self.alpha * log_probs - q).mean()
+            # policy_loss = (log_probs - q).mean()
 
             self.value_opt.zero_grad()
             value_loss.backward()

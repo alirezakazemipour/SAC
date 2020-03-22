@@ -2,8 +2,10 @@ import gym
 from agent import SAC
 import time
 import psutil
+import mujoco_py
 
-ENV_NAME = "Pendulum-v0"
+# ENV_NAME = "Pendulum-v0"
+ENV_NAME = "Ant-v2"
 test_env = gym.make(ENV_NAME)
 
 n_states = test_env.observation_space.shape[0]
@@ -11,11 +13,12 @@ n_actions = test_env.action_space.shape[0]
 action_bounds = [test_env.action_space.low[0], test_env.action_space.high[0]]
 
 MAX_EPISODES = 10000
-memory_size = 1e+6
+memory_size = 1e+5
 batch_size = 256
 gamma = 0.99
 alpha = 0.2
 lr = 3e-4
+reward_scale = 5
 
 to_gb = lambda in_bytes: in_bytes / 1024 / 1024 / 1024
 global_running_reward = 0
@@ -58,7 +61,8 @@ if __name__ == "__main__":
                 gamma=gamma,
                 alpha=alpha,
                 lr=lr,
-                action_bounds=action_bounds)
+                action_bounds=action_bounds,
+                reward_scale=reward_scale)
 
     for episode in range(MAX_EPISODES):
         state = env.reset()
