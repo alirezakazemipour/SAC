@@ -51,7 +51,7 @@ class QvalueNetwork(nn.Module):
         self.q_value.bias.data.zero_()
 
     def forward(self, states, actions):
-        x = torch.cat([states, actions], dim=-1)  # ToDo specify which dimension to concatenate
+        x = torch.cat([states, actions], dim=-1)
         x = F.relu(self.hidden1(x))
         x = F.relu(self.hidden2(x))
         return self.q_value(x)
@@ -84,7 +84,8 @@ class PolicyNetwork(nn.Module):
         x = F.relu(self.hidden2(x))
 
         mu = self.mu(x)
-        std = self.log_std(x).exp()
+        log_std = self.log_std(x)
+        std = log_std.clamp(min=-20, max=2).exp()
         dist = Normal(mu, std)
         return dist
 

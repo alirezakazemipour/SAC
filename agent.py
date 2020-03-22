@@ -7,7 +7,7 @@ from torch.optim.adam import Adam
 
 
 class SAC:
-    def __init__(self, n_states, n_actions, memory_size, batch_size, gamma, alpha, lr):
+    def __init__(self, n_states, n_actions, memory_size, batch_size, gamma, alpha, lr, action_bounds):
         self.n_states = n_states
         self.n_actions = n_actions
         self.memory_size = memory_size
@@ -15,6 +15,7 @@ class SAC:
         self.gamma = gamma
         self.alpha = alpha
         self.lr = lr
+        self.action_bounds = action_bounds
         self.memory = Memory(memory_size=self.memory_size)
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -36,11 +37,11 @@ class SAC:
         self.policy_opt = Adam(self.policy_network.parameters(), lr=self.lr)
 
     def store(self, state, reward, done, action, next_state):
-        state = from_numpy(state).float().to(self.device)
-        reward = torch.Tensor([reward]).to(self.device)
-        done = torch.Tensor([done]).to(self.device)
-        action = torch.Tensor([action]).to(self.device)
-        next_state = from_numpy(next_state).float().to(self.device)
+        state = from_numpy(state).float().to("cpu")
+        reward = torch.Tensor([reward]).to("cpu")
+        done = torch.Tensor([done]).to("cpu")
+        action = torch.Tensor([action]).to("cpu")
+        next_state = from_numpy(next_state).float().to("cpu")
         self.memory.add(state, reward, done, action, next_state)
 
     def unpack(self, batch):
@@ -66,7 +67,7 @@ class SAC:
             q2 = self.q_value_network2(states, actions)
             q = torch.min(q1, q2)
             reparam_action, log_prob = self.policy_network.sample_or_likelihood(states)
-            target_value = q.detach() - log_prob.detach()
+            target_value = q.detach() - self.alpha * log_prob.detach()
 
             value = self.value_network(states)
             value_loss = self.value_loss(value, target_value)
@@ -103,7 +104,7 @@ class SAC:
         states = np.expand_dims(states, axis=0)
         states = from_numpy(states).float().to(self.device)
         action, _ = self.policy_network.sample_or_likelihood(states)
-        return action.detach().cpu().numpy()[0]
+        return action.detach().cpu().numpy()[0] * self.action_bounds[1]
 
     @staticmethod
     def soft_update_target_network(local_network, target_network, tau=0.005):
