@@ -8,13 +8,13 @@ from torch.nn import functional as F
 
 
 class SAC:
-    def __init__(self, n_states, n_actions, memory_size, batch_size, gamma, lr, action_bounds, reward_scale):
+    def __init__(self, n_states, n_actions, memory_size, batch_size, gamma, alpha, lr, action_bounds, reward_scale):
         self.n_states = n_states
         self.n_actions = n_actions
         self.memory_size = memory_size
         self.batch_size = batch_size
         self.gamma = gamma
-        # self.alpha = alpha
+        self.alpha = alpha
         self.lr = lr
         self.action_bounds = action_bounds
         self.reward_scale = reward_scale
@@ -30,18 +30,18 @@ class SAC:
         self.q_value_target_network2 = QvalueNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
 
         self.q_value_target_network1.load_state_dict(self.q_value_network1.state_dict())
-        # self.q_value_target_network1.eval()
+        self.q_value_target_network1.eval()
 
         self.q_value_target_network2.load_state_dict(self.q_value_network2.state_dict())
-        # self.q_value_target_network2.eval()
+        self.q_value_target_network2.eval()
 
         self.target_alpha = -n_states
-        self.alpha = torch.zeros(1, requires_grad=True, device=self.device)
+        self.log_alpha = torch.zeros(1, requires_grad=True, device=self.device)
 
         self.q_value1_opt = Adam(self.q_value_network1.parameters(), lr=self.lr)
         self.q_value2_opt = Adam(self.q_value_network2.parameters(), lr=self.lr)
         self.policy_opt = Adam(self.policy_network.parameters(), lr=self.lr)
-        self.alpha_opt = Adam([self.alpha], lr=self.lr)
+        self.alpha_opt = Adam([self.log_alpha], lr=self.lr)
 
     def store(self, state, reward, done, action, next_state):
         state = from_numpy(state).float().to("cpu")
@@ -91,7 +91,7 @@ class SAC:
 
             policy_loss = (self.alpha * log_probs - q).mean()
 
-            alpha_loss = -self.alpha * (log_probs.mean().detach() + self.target_alpha)
+            alpha_loss = -(self.log_alpha * (log_probs + self.target_alpha).detach()).mean()
 
             self.q_value1_opt.zero_grad()
             q1_loss.backward()
@@ -109,15 +109,21 @@ class SAC:
             alpha_loss.backward()
             self.alpha_opt.step()
 
+            self.alpha = self.log_alpha.exp()
+
             self.soft_update_target_network(self.q_value_network1, self.q_value_target_network1)
+            self.q_value_target_network1.eval()
             self.soft_update_target_network(self.q_value_network2, self.q_value_target_network2)
+            self.q_value_target_network2.eval()
 
             return alpha_loss.item(), 0.5 * (q1_loss + q2_loss).item(), policy_loss.item()
 
     def choose_action(self, states):
         states = np.expand_dims(states, axis=0)
         states = from_numpy(states).float().to(self.device)
+        self.policy_network.eval()
         action, _ = self.policy_network.sample_or_likelihood(states)
+        self.policy_network.train()
         return action.detach().cpu().numpy()[0]
 
     @staticmethod

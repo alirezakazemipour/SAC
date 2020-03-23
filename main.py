@@ -16,7 +16,7 @@ MAX_EPISODES = 10000
 memory_size = 1e+6
 batch_size = 256
 gamma = 0.99
-# alpha = 0.2
+alpha = 0.2
 lr = 3e-4
 reward_scale = 1
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
                 memory_size=memory_size,
                 batch_size=batch_size,
                 gamma=gamma,
-                # alpha=alpha,
+                alpha=alpha,
                 lr=lr,
                 action_bounds=action_bounds,
                 reward_scale=reward_scale)
