@@ -30,10 +30,10 @@ class SAC:
         self.q_value_target_network2 = QvalueNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
 
         self.q_value_target_network1.load_state_dict(self.q_value_network1.state_dict())
-        self.q_value_target_network1.eval()
+        # self.q_value_target_network1.eval()
 
         self.q_value_target_network2.load_state_dict(self.q_value_network2.state_dict())
-        self.q_value_target_network2.eval()
+        # self.q_value_target_network2.eval()
 
         self.target_alpha = -n_states
         self.alpha = torch.zeros(1, requires_grad=True, device=self.device)
@@ -70,15 +70,15 @@ class SAC:
             states, rewards, dones, actions, next_states = self.unpack(batch)
 
             # Calculating the Q-Value target
-            reparam_actions, log_probs = self.policy_network.sample_or_likelihood(next_states)
+            next_reparam_actions, log_probs = self.policy_network.sample_or_likelihood(next_states)
             with torch.no_grad():
-                next_q1 = self.q_value_target_network1(next_states, reparam_actions)
-                next_q2 = self.q_value_target_network2(next_states, reparam_actions)
+                next_q1 = self.q_value_target_network1(next_states, next_reparam_actions)
+                next_q2 = self.q_value_target_network2(next_states, next_reparam_actions)
                 next_q = torch.min(next_q1, next_q2)
-                target_q = self.reward_scale * rewards + self.gamma * ( 1 - dones) * (next_q - self.alpha * log_probs)
+                target_q = self.reward_scale * rewards + self.gamma * (1 - dones) * (next_q - self.alpha * log_probs)
 
-            q1 = self.q_value_network1(states, target_q)
-            q2 = self.q_value_network2(states, target_q)
+            q1 = self.q_value_network1(states, actions)
+            q2 = self.q_value_network2(states, actions)
             q1_loss = F.mse_loss(q1, target_q)
             q2_loss = F.mse_loss(q2, target_q)
 
@@ -89,7 +89,7 @@ class SAC:
                 q2 = self.q_value_network2(states, reparam_actions)
                 q = torch.min(q1, q2)
 
-            policy_loss = (self.alpha.detach() * log_probs - q).mean()
+            policy_loss = (self.alpha * log_probs - q).mean()
 
             alpha_loss = -self.alpha * (log_probs.mean().detach() + self.target_alpha)
 
@@ -118,7 +118,7 @@ class SAC:
         states = np.expand_dims(states, axis=0)
         states = from_numpy(states).float().to(self.device)
         action, _ = self.policy_network.sample_or_likelihood(states)
-        return action.detach().cpu().numpy()[0] * self.action_bounds[1]
+        return action.detach().cpu().numpy()[0]
 
     @staticmethod
     def soft_update_target_network(local_network, target_network, tau=0.005):
