@@ -8,13 +8,13 @@ from torch.nn import functional as F
 
 
 class SAC:
-    def __init__(self, n_states, n_actions, memory_size, batch_size, gamma, alpha, lr, action_bounds, reward_scale):
+    def __init__(self, n_states, n_actions, memory_size, batch_size, gamma, lr, action_bounds, reward_scale):
         self.n_states = n_states
         self.n_actions = n_actions
         self.memory_size = memory_size
         self.batch_size = batch_size
         self.gamma = gamma
-        self.alpha = alpha
+        # self.alpha = alpha
         self.lr = lr
         self.action_bounds = action_bounds
         self.reward_scale = reward_scale
@@ -22,7 +22,8 @@ class SAC:
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self.policy_network = PolicyNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
+        self.policy_network = PolicyNetwork(n_states=self.n_states, n_actions=self.n_actions,
+                                            action_bounds=self.action_bounds).to(self.device)
         self.q_value_network1 = QvalueNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
         self.q_value_network2 = QvalueNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
         self.q_value_target_network1 = QvalueNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
