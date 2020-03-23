@@ -2,10 +2,10 @@ import gym
 from agent import SAC
 import time
 import psutil
-import mujoco_py
+# import mujoco_py
 
-# ENV_NAME = "Pendulum-v0"
-ENV_NAME = "Ant-v2"
+ENV_NAME = "Pendulum-v0"
+# ENV_NAME = "Ant-v2"
 test_env = gym.make(ENV_NAME)
 
 n_states = test_env.observation_space.shape[0]
@@ -24,7 +24,7 @@ to_gb = lambda in_bytes: in_bytes / 1024 / 1024 / 1024
 global_running_reward = 0
 
 
-def log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, memory_length):
+def log(episode, start_time, episode_reward, alpha_loss, q_loss, policy_loss, memory_length):
     global global_running_reward
     if episode == 0:
         global_running_reward = episode_reward
@@ -37,7 +37,7 @@ def log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, me
         print(f"EP:{episode}| "
               f"EP_r:{episode_reward:3.3f}| "
               f"EP_running_reward:{global_running_reward:3.3f}| "
-              f"Value_Loss:{value_loss:3.3f}| "
+              f"Alpha_Loss:{alpha_loss:3.3f}| "
               f"Q-Value_Loss:{q_loss:3.3f}| "
               f"Policy_Loss:{policy_loss:3.3f}| "
               f"Memory_length:{memory_length}| "
@@ -71,11 +71,11 @@ if __name__ == "__main__":
             action = agent.choose_action(state)
             next_state, reward, done, _ = env.step(action)
             agent.store(state, reward, done, action, next_state)
-            value_loss, q_loss, policy_loss = agent.train()
+            alpha_loss, q_loss, policy_loss = agent.train()
             if episode % 250 == 0:
                 agent.save_weights()
             if done:
                 break
             episode_reward += reward
             state = next_state
-        log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, len(agent.memory))
+        log(episode, start_time, episode_reward, alpha_loss, q_loss, policy_loss, len(agent.memory))

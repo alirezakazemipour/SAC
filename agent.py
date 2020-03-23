@@ -1,9 +1,10 @@
 import numpy as np
-from model import PolicyNetwork, QvalueNetwork, ValueNetwork
+from model import PolicyNetwork, QvalueNetwork
 import torch
 from replay_memory import Memory, Transition
 from torch import from_numpy
 from torch.optim.adam import Adam
+from torch.nn import functional as F
 
 
 class SAC:
@@ -24,18 +25,22 @@ class SAC:
         self.policy_network = PolicyNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
         self.q_value_network1 = QvalueNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
         self.q_value_network2 = QvalueNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
-        self.value_network = ValueNetwork(n_states=self.n_states).to(self.device)
-        self.value_target_network = ValueNetwork(n_states=self.n_states).to(self.device)
-        self.value_target_network.load_state_dict(self.value_network.state_dict())
-        self.value_target_network.eval()
+        self.q_value_target_network1 = QvalueNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
+        self.q_value_target_network2 = QvalueNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
 
-        self.value_loss = torch.nn.MSELoss()
-        self.q_value_loss = torch.nn.MSELoss()
+        self.q_value_target_network1.load_state_dict(self.q_value_network1.state_dict())
+        self.q_value_target_network1.eval()
 
-        self.value_opt = Adam(self.value_network.parameters(), lr=self.lr)
+        self.q_value_target_network2.load_state_dict(self.q_value_network2.state_dict())
+        self.q_value_target_network2.eval()
+
+        self.target_alpha = -n_states
+        self.alpha = torch.zeros(1, requires_grad=True, device=self.device)
+
         self.q_value1_opt = Adam(self.q_value_network1.parameters(), lr=self.lr)
         self.q_value2_opt = Adam(self.q_value_network2.parameters(), lr=self.lr)
         self.policy_opt = Adam(self.policy_network.parameters(), lr=self.lr)
+        self.alpha_opt = Adam([self.alpha], lr=self.lr)
 
     def store(self, state, reward, done, action, next_state):
         state = from_numpy(state).float().to("cpu")
@@ -63,32 +68,29 @@ class SAC:
             batch = self.memory.sample(self.batch_size)
             states, rewards, dones, actions, next_states = self.unpack(batch)
 
-            # Calculating the value target
-            reparam_actions, log_probs = self.policy_network.sample_or_likelihood(states)
-            q1 = self.q_value_network1(states, reparam_actions)
-            q2 = self.q_value_network2(states, reparam_actions)
-            q = torch.min(q1, q2)
-            target_value = q.detach() - self.alpha * log_probs.detach()
-            # target_value = q.detach() - log_probs.detach()
-
-            value = self.value_network(states)
-            value_loss = self.value_loss(value, target_value)
-
             # Calculating the Q-Value target
+            reparam_actions, log_probs = self.policy_network.sample_or_likelihood(next_states)
             with torch.no_grad():
-                target_q = self.reward_scale * rewards + self.gamma * self.value_target_network(next_states) * (
-                            1 - dones)
-            q1 = self.q_value_network1(states, actions)
-            q2 = self.q_value_network2(states, actions)
-            q1_loss = self.q_value_loss(q1, target_q)
-            q2_loss = self.q_value_loss(q2, target_q)
+                next_q1 = self.q_value_target_network1(next_states, reparam_actions)
+                next_q2 = self.q_value_target_network2(next_states, reparam_actions)
+                next_q = torch.min(next_q1, next_q2)
+                target_q = self.reward_scale * rewards + self.gamma * ( 1 - dones) * (next_q - self.alpha * log_probs)
 
-            policy_loss = (self.alpha * log_probs - q).mean()
-            # policy_loss = (log_probs - q).mean()
+            q1 = self.q_value_network1(states, target_q)
+            q2 = self.q_value_network2(states, target_q)
+            q1_loss = F.mse_loss(q1, target_q)
+            q2_loss = F.mse_loss(q2, target_q)
 
-            self.value_opt.zero_grad()
-            value_loss.backward()
-            self.value_opt.step()
+            # Calculating the Policy target
+            reparam_actions, log_probs = self.policy_network.sample_or_likelihood(states)
+            with torch.no_grad():
+                q1 = self.q_value_network1(states, reparam_actions)
+                q2 = self.q_value_network2(states, reparam_actions)
+                q = torch.min(q1, q2)
+
+            policy_loss = (self.alpha.detach() * log_probs - q).mean()
+
+            alpha_loss = -self.alpha * (log_probs.mean().detach() + self.target_alpha)
 
             self.q_value1_opt.zero_grad()
             q1_loss.backward()
@@ -102,9 +104,14 @@ class SAC:
             policy_loss.backward()
             self.policy_opt.step()
 
-            self.soft_update_target_network(self.value_network, self.value_target_network)
+            self.alpha_opt.zero_grad()
+            alpha_loss.backward()
+            self.alpha_opt.step()
 
-            return value_loss.item(), 0.5 * (q1_loss + q2_loss).item(), policy_loss.item()
+            self.soft_update_target_network(self.q_value_network1, self.q_value_target_network1)
+            self.soft_update_target_network(self.q_value_network2, self.q_value_target_network2)
+
+            return alpha_loss.item(), 0.5 * (q1_loss + q2_loss).item(), policy_loss.item()
 
     def choose_action(self, states):
         states = np.expand_dims(states, axis=0)

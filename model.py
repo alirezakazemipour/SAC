@@ -11,26 +11,26 @@ def init_weight(layer, initializer="he normal"):
         nn.init.kaiming_normal_(layer.weight)
 
 
-class ValueNetwork(nn.Module):
-    def __init__(self, n_states, n_hidden_filters=256):
-        super(ValueNetwork, self).__init__()
-        self.n_states = n_states
-        self.n_hidden_filters = n_hidden_filters
-
-        self.hidden1 = nn.Linear(in_features=self.n_states, out_features=self.n_hidden_filters)
-        init_weight(self.hidden1)
-        self.hidden1.bias.data.zero_()
-        self.hidden2 = nn.Linear(in_features=self.n_hidden_filters, out_features=self.n_hidden_filters)
-        init_weight(self.hidden2)
-        self.hidden2.bias.data.zero_()
-        self.value = nn.Linear(in_features=self.n_hidden_filters, out_features=1)
-        init_weight(self.value, initializer="xavier uniform")
-        self.value.bias.data.zero_()
-
-    def forward(self, states):
-        x = F.relu(self.hidden1(states))
-        x = F.relu(self.hidden2(x))
-        return self.value(x)
+# class ValueNetwork(nn.Module):
+#     def __init__(self, n_states, n_hidden_filters=256):
+#         super(ValueNetwork, self).__init__()
+#         self.n_states = n_states
+#         self.n_hidden_filters = n_hidden_filters
+#
+#         self.hidden1 = nn.Linear(in_features=self.n_states, out_features=self.n_hidden_filters)
+#         init_weight(self.hidden1)
+#         self.hidden1.bias.data.zero_()
+#         self.hidden2 = nn.Linear(in_features=self.n_hidden_filters, out_features=self.n_hidden_filters)
+#         init_weight(self.hidden2)
+#         self.hidden2.bias.data.zero_()
+#         self.value = nn.Linear(in_features=self.n_hidden_filters, out_features=1)
+#         init_weight(self.value, initializer="xavier uniform")
+#         self.value.bias.data.zero_()
+#
+#     def forward(self, states):
+#         x = F.relu(self.hidden1(states))
+#         x = F.relu(self.hidden2(x))
+#         return self.value(x)
 
 
 class QvalueNetwork(nn.Module):
