@@ -58,7 +58,7 @@ class SAC:
         rewards = torch.cat(batch.reward).view(self.batch_size, 1).to(self.device)
         dones = torch.cat(batch.done).view(self.batch_size, 1).to(self.device)
         actions = torch.cat(batch.action).view(-1, self.n_actions).to(self.device)
-        next_states = torch.cat(batch.state).view(self.batch_size, self.n_states).to(self.device)
+        next_states = torch.cat(batch.next_state).view(self.batch_size, self.n_states).to(self.device)
 
         return states, rewards, dones, actions, next_states
 
@@ -70,8 +70,8 @@ class SAC:
             states, rewards, dones, actions, next_states = self.unpack(batch)
 
             # Calculating the Q-Value target
-            next_reparam_actions, log_probs = self.policy_network.sample_or_likelihood(next_states)
             with torch.no_grad():
+                next_reparam_actions, log_probs = self.policy_network.sample_or_likelihood(next_states)
                 next_q1 = self.q_value_target_network1(next_states, next_reparam_actions)
                 next_q2 = self.q_value_target_network2(next_states, next_reparam_actions)
                 next_q = torch.min(next_q1, next_q2)
@@ -84,14 +84,12 @@ class SAC:
 
             # Calculating the Policy target
             reparam_actions, log_probs = self.policy_network.sample_or_likelihood(states)
-            with torch.no_grad():
-                q1 = self.q_value_network1(states, reparam_actions)
-                q2 = self.q_value_network2(states, reparam_actions)
-                q = torch.min(q1, q2)
+            # with torch.no_grad():
+            q1 = self.q_value_network1(states, reparam_actions)
+            q2 = self.q_value_network2(states, reparam_actions)
+            q = torch.min(q1, q2)
 
-            policy_loss = (self.alpha * log_probs - q).mean()
-
-            alpha_loss = -(self.log_alpha * (log_probs + self.target_alpha).detach()).mean()
+            policy_loss = ((self.alpha * log_probs) - q).mean()
 
             self.q_value1_opt.zero_grad()
             q1_loss.backward()
@@ -104,6 +102,8 @@ class SAC:
             self.policy_opt.zero_grad()
             policy_loss.backward()
             self.policy_opt.step()
+
+            alpha_loss = -(self.log_alpha * (log_probs + self.target_alpha).detach()).mean()
 
             self.alpha_opt.zero_grad()
             alpha_loss.backward()
@@ -121,9 +121,7 @@ class SAC:
     def choose_action(self, states):
         states = np.expand_dims(states, axis=0)
         states = from_numpy(states).float().to(self.device)
-        self.policy_network.eval()
         action, _ = self.policy_network.sample_or_likelihood(states)
-        self.policy_network.train()
         return action.detach().cpu().numpy()[0]
 
     @staticmethod

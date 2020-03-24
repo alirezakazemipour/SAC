@@ -33,7 +33,7 @@ def log(episode, start_time, episode_reward, alpha_loss, q_loss, policy_loss, me
 
     ram = psutil.virtual_memory()
 
-    if episode % 50 == 0:
+    if episode % 100 == 0:
         print(f"EP:{episode}| "
               f"EP_r:{episode_reward:3.3f}| "
               f"EP_running_reward:{global_running_reward:3.3f}| "
@@ -68,6 +68,9 @@ if __name__ == "__main__":
 
         start_time = time.time()
         while not done:
+            # if episode < 50:
+            #     action = env.action_space.sample()
+            # else:
             action = agent.choose_action(state)
             next_state, reward, done, _ = env.step(action)
             agent.store(state, reward, done, action, next_state)
