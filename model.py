@@ -75,6 +75,7 @@ class PolicyNetwork(nn.Module):
         action = torch.tanh(u)
         log_prob = dist.log_prob(u)
         # Enforcing action bounds
-        log_prob -= torch.log(self.action_bounds[1] * (1 - action ** 2) + 1e-6)
+        # log_prob -= torch.log(self.action_bounds[1] * (1 - action ** 2) + 1e-6)
+        log_prob -= torch.log((1 - action ** 2) + 1e-6)
         log_prob = log_prob.sum(-1, keepdim=True)
         return action * self.action_bounds[1], log_prob

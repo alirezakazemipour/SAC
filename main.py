@@ -2,6 +2,7 @@ import gym
 from agent import SAC
 import time
 import psutil
+from play import Play
 # import mujoco_py
 
 ENV_NAME = "Pendulum-v0"
@@ -12,7 +13,7 @@ n_states = test_env.observation_space.shape[0]
 n_actions = test_env.action_space.shape[0]
 action_bounds = [test_env.action_space.low[0], test_env.action_space.high[0]]
 
-MAX_EPISODES = 10000
+MAX_EPISODES = 1000
 memory_size = 1e+6
 batch_size = 256
 gamma = 0.99
@@ -75,10 +76,14 @@ if __name__ == "__main__":
             next_state, reward, done, _ = env.step(action)
             agent.store(state, reward, done, action, next_state)
             alpha_loss, q_loss, policy_loss = agent.train()
-            if episode % 250 == 0:
-                agent.save_weights()
+            # if episode % 300 == 0:
+            #     agent.save_weights()
             if done:
                 break
             episode_reward += reward
             state = next_state
         log(episode, start_time, episode_reward, alpha_loss, q_loss, policy_loss, len(agent.memory))
+
+    agent.save_weights()
+    player = Play(env, agent)
+    player.evaluate()
