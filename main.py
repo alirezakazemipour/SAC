@@ -16,7 +16,7 @@ MAX_EPISODES = 10000
 memory_size = 1e+6
 batch_size = 256
 gamma = 0.99
-alpha = 0.2
+alpha = 1
 lr = 3e-4
 reward_scale = 5
 
