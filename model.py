@@ -51,7 +51,7 @@ class QvalueNetwork(nn.Module):
         self.q_value.bias.data.zero_()
 
     def forward(self, states, actions):
-        x = torch.cat([states, actions], dim=-1)
+        x = torch.cat([states, actions], dim=1)
         x = F.relu(self.hidden1(x))
         x = F.relu(self.hidden2(x))
         return self.q_value(x)
@@ -96,5 +96,6 @@ class PolicyNetwork(nn.Module):
         action = torch.tanh(u)
         log_prob = dist.log_prob(value=u)
         # Enforcing action bounds
-        log_prob -= (torch.log(1 - action ** 2 + 1e-6)).cumsum(dim=-1)
+        log_prob -= (torch.log(1 - action ** 2 + 1e-6))
+        log_prob = log_prob.sum(-1, keepdim=True)
         return action, log_prob

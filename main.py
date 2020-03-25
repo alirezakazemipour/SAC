@@ -2,8 +2,10 @@ import gym
 from agent import SAC
 import time
 import psutil
+import mujoco_py
 
-ENV_NAME = "Pendulum-v0"
+# ENV_NAME = "Pendulum-v0"
+ENV_NAME = "Ant-v2"
 test_env = gym.make(ENV_NAME)
 
 n_states = test_env.observation_space.shape[0]
@@ -14,8 +16,9 @@ MAX_EPISODES = 10000
 memory_size = 1e+6
 batch_size = 256
 gamma = 0.99
-alpha = 0.2
+alpha = 1
 lr = 3e-4
+reward_scale = 5
 
 to_gb = lambda in_bytes: in_bytes / 1024 / 1024 / 1024
 global_running_reward = 0
@@ -29,9 +32,6 @@ def log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, me
         global_running_reward = 0.99 * global_running_reward + 0.01 * episode_reward
 
     ram = psutil.virtual_memory()
-
-    if to_gb(ram.used) > 7:
-        exit(0)
 
     if episode % 50 == 0:
         print(f"EP:{episode}| "
@@ -58,7 +58,8 @@ if __name__ == "__main__":
                 gamma=gamma,
                 alpha=alpha,
                 lr=lr,
-                action_bounds=action_bounds)
+                action_bounds=action_bounds,
+                reward_scale=reward_scale)
 
     for episode in range(MAX_EPISODES):
         state = env.reset()
@@ -71,6 +72,8 @@ if __name__ == "__main__":
             next_state, reward, done, _ = env.step(action)
             agent.store(state, reward, done, action, next_state)
             value_loss, q_loss, policy_loss = agent.train()
+            if episode % 250 == 0:
+                agent.save_weights()
             if done:
                 break
             episode_reward += reward
