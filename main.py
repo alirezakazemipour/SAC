@@ -3,6 +3,7 @@ from agent import SAC
 import time
 import psutil
 import mujoco_py
+from torch.utils.tensorboard import SummaryWriter
 
 # ENV_NAME = "Pendulum-v0"
 ENV_NAME = "Ant-v2"
@@ -12,7 +13,7 @@ n_states = test_env.observation_space.shape[0]
 n_actions = test_env.action_space.shape[0]
 action_bounds = [test_env.action_space.low[0], test_env.action_space.high[0]]
 
-MAX_EPISODES = 10000
+MAX_EPISODES = 2000
 memory_size = 1e+6
 batch_size = 256
 gamma = 0.99
@@ -33,7 +34,7 @@ def log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, me
 
     ram = psutil.virtual_memory()
 
-    if episode % 50 == 0:
+    if episode % 400 == 0:
         print(f"EP:{episode}| "
               f"EP_r:{episode_reward:3.3f}| "
               f"EP_running_reward:{global_running_reward:3.3f}| "
@@ -43,6 +44,14 @@ def log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, me
               f"Memory_length:{memory_length}| "
               f"Duration:{time.time() - start_time:3.3f}| "
               f"{to_gb(ram.used):.1f}/{to_gb(ram.total):.1f} GB RAM")
+        agent.save_weights()
+
+    with SummaryWriter("./logs/") as writer:
+        writer.add_scalar("Value Loss", value_loss, episode)
+        writer.add_scalar("Q-Value Loss", q_loss, episode)
+        writer.add_scalar("Policy Loss", policy_loss, episode)
+        writer.add_scalar("Episode running reward", global_running_reward, episode)
+        writer.add_scalar("Episode reward", episode_reward, episode)
 
 
 if __name__ == "__main__":
