@@ -4,16 +4,17 @@ import time
 import psutil
 import mujoco_py
 from torch.utils.tensorboard import SummaryWriter
+from play import Play
 
 # ENV_NAME = "Pendulum-v0"
-ENV_NAME = "Ant-v2"
+ENV_NAME = "Walker2d-v2"
 test_env = gym.make(ENV_NAME)
 
 n_states = test_env.observation_space.shape[0]
 n_actions = test_env.action_space.shape[0]
 action_bounds = [test_env.action_space.low[0], test_env.action_space.high[0]]
 
-MAX_EPISODES = 2000
+MAX_EPISODES = 20000
 memory_size = 1e+6
 batch_size = 256
 gamma = 0.99
@@ -70,21 +71,24 @@ if __name__ == "__main__":
                 action_bounds=action_bounds,
                 reward_scale=reward_scale)
 
-    for episode in range(MAX_EPISODES):
-        state = env.reset()
-        episode_reward = 0
-        done = 0
+    # for episode in range(1, MAX_EPISODES + 1):
+    #     state = env.reset()
+    #     episode_reward = 0
+    #     done = 0
+    #
+    #     start_time = time.time()
+    #     while not done:
+    #         action = agent.choose_action(state)
+    #         next_state, reward, done, _ = env.step(action)
+    #         agent.store(state, reward, done, action, next_state)
+    #         value_loss, q_loss, policy_loss = agent.train()
+    #         if episode % 250 == 0:
+    #             agent.save_weights()
+    #         if done:
+    #             break
+    #         episode_reward += reward
+    #         state = next_state
+    #     log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, len(agent.memory))
 
-        start_time = time.time()
-        while not done:
-            action = agent.choose_action(state)
-            next_state, reward, done, _ = env.step(action)
-            agent.store(state, reward, done, action, next_state)
-            value_loss, q_loss, policy_loss = agent.train()
-            if episode % 250 == 0:
-                agent.save_weights()
-            if done:
-                break
-            episode_reward += reward
-            state = next_state
-        log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, len(agent.memory))
+    player = Play(env, agent)
+    player.evaluate()

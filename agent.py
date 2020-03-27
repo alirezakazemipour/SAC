@@ -75,7 +75,7 @@ class SAC:
 
             # Calculating the Q-Value target
             with torch.no_grad():
-                target_q = self.reward_scale * rewards +\
+                target_q = self.reward_scale * rewards + \
                            self.gamma * self.value_target_network(next_states) * (1 - dones)
             q1 = self.q_value_network1(states, actions)
             q2 = self.q_value_network2(states, actions)
@@ -117,3 +117,9 @@ class SAC:
 
     def save_weights(self):
         torch.save(self.policy_network.state_dict(), "./weights.pth")
+
+    def load_weights(self):
+        self.policy_network.load_state_dict(torch.load("./weights.pth"))
+
+    def set_to_eval_mode(self):
+        self.policy_network.eval()
