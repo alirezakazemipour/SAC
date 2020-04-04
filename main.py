@@ -7,7 +7,7 @@ from torch.utils.tensorboard import SummaryWriter
 from play import Play
 
 # ENV_NAME = "Pendulum-v0"
-ENV_NAME = "Walker2d-v2"
+ENV_NAME = "Humanoid-v2"
 test_env = gym.make(ENV_NAME)
 
 n_states = test_env.observation_space.shape[0]
@@ -20,7 +20,7 @@ batch_size = 256
 gamma = 0.99
 alpha = 1
 lr = 3e-4
-reward_scale = 5
+reward_scale = 20
 
 to_gb = lambda in_bytes: in_bytes / 1024 / 1024 / 1024
 global_running_reward = 0
@@ -71,24 +71,24 @@ if __name__ == "__main__":
                 action_bounds=action_bounds,
                 reward_scale=reward_scale)
 
-    # for episode in range(1, MAX_EPISODES + 1):
-    #     state = env.reset()
-    #     episode_reward = 0
-    #     done = 0
-    #
-    #     start_time = time.time()
-    #     while not done:
-    #         action = agent.choose_action(state)
-    #         next_state, reward, done, _ = env.step(action)
-    #         agent.store(state, reward, done, action, next_state)
-    #         value_loss, q_loss, policy_loss = agent.train()
-    #         if episode % 250 == 0:
-    #             agent.save_weights()
-    #         if done:
-    #             break
-    #         episode_reward += reward
-    #         state = next_state
-    #     log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, len(agent.memory))
+    for episode in range(1, MAX_EPISODES + 1):
+        state = env.reset()
+        episode_reward = 0
+        done = 0
+
+        start_time = time.time()
+        while not done:
+            action = agent.choose_action(state)
+            next_state, reward, done, _ = env.step(action)
+            agent.store(state, reward, done, action, next_state)
+            value_loss, q_loss, policy_loss = agent.train()
+            if episode % 250 == 0:
+                agent.save_weights()
+            if done:
+                break
+            episode_reward += reward
+            state = next_state
+        log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, len(agent.memory))
 
     player = Play(env, agent)
     player.evaluate()

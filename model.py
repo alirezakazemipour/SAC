@@ -58,11 +58,12 @@ class QvalueNetwork(nn.Module):
 
 
 class PolicyNetwork(nn.Module):
-    def __init__(self, n_states, n_actions, n_hidden_filters=256):
+    def __init__(self, n_states, n_actions, action_bounds, n_hidden_filters=256):
         super(PolicyNetwork, self).__init__()
         self.n_states = n_states
         self.n_hidden_filters = n_hidden_filters
         self.n_actions = n_actions
+        self.action_bounds = action_bounds
 
         self.hidden1 = nn.Linear(in_features=self.n_states, out_features=self.n_hidden_filters)
         init_weight(self.hidden1)
@@ -98,4 +99,4 @@ class PolicyNetwork(nn.Module):
         # Enforcing action bounds
         log_prob -= (torch.log(1 - action ** 2 + 1e-6))
         log_prob = log_prob.sum(-1, keepdim=True)
-        return action, log_prob
+        return action * self.action_bounds[1], log_prob

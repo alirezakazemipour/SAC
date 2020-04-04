@@ -21,7 +21,8 @@ class SAC:
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self.policy_network = PolicyNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
+        self.policy_network = PolicyNetwork(n_states=self.n_states, n_actions=self.n_actions,
+                                            action_bounds=self.action_bounds).to(self.device)
         self.q_value_network1 = QvalueNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
         self.q_value_network2 = QvalueNetwork(n_states=self.n_states, n_actions=self.n_actions).to(self.device)
         self.value_network = ValueNetwork(n_states=self.n_states).to(self.device)
