@@ -17,7 +17,9 @@ eggs/
 lib/
 lib64/
 .idea/
-logs/
+Ant/logs/
+Walker2d/logs/
+Humanoid/logs/
 vid/
 models/
 *.txt

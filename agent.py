@@ -117,10 +117,10 @@ class SAC:
             target_param.data.copy_(tau * local_param.data + (1 - tau) * target_param.data)
 
     def save_weights(self):
-        torch.save(self.policy_network.state_dict(), "./weights.pth")
+        torch.save(self.policy_network.state_dict(), "./Humanoid_weights.pth")
 
     def load_weights(self):
-        self.policy_network.load_state_dict(torch.load("./weights.pth"))
+        self.policy_network.load_state_dict(torch.load("./Humanoid_weights.pth"))
 
     def set_to_eval_mode(self):
         self.policy_network.eval()

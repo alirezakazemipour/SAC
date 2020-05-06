@@ -5,7 +5,7 @@ import time
 
 
 class Play:
-    def __init__(self, env, agent, max_episode=4):
+    def __init__(self, env, agent, max_episode=10):
         self.env = env
         # self.env = gym.wrappers.Monitor(env, "./vid", video_callable=lambda episode_id: True, force=True)
         self.max_episode = max_episode
@@ -21,11 +21,11 @@ class Play:
             done = False
             episode_reward = 0
             # x = input("Push any button to proceed...")
-            while not done:
+            for _ in range(self.env._max_episode_steps):
                 action = self.agent.choose_action(s)
                 s_, r, done, _ = self.env.step(action)
                 episode_reward += r
                 s = s_
                 self.env.render(mode="human")
-                time.sleep(0.03)
+                # time.sleep(0.03)
             print(f"episode reward:{episode_reward:3.3f}")

@@ -7,7 +7,7 @@ from torch.utils.tensorboard import SummaryWriter
 from play import Play
 
 # ENV_NAME = "Pendulum-v0"
-ENV_NAME = "Humanoid-v2"
+ENV_NAME = "Ant-v2"
 test_env = gym.make(ENV_NAME)
 
 n_states = test_env.observation_space.shape[0]
@@ -47,7 +47,7 @@ def log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, me
               f"{to_gb(ram.used):.1f}/{to_gb(ram.total):.1f} GB RAM")
         agent.save_weights()
 
-    with SummaryWriter("./logs/") as writer:
+    with SummaryWriter("Humanoid/logs/") as writer:
         writer.add_scalar("Value Loss", value_loss, episode)
         writer.add_scalar("Q-Value Loss", q_loss, episode)
         writer.add_scalar("Policy Loss", policy_loss, episode)
@@ -71,24 +71,24 @@ if __name__ == "__main__":
                 action_bounds=action_bounds,
                 reward_scale=reward_scale)
 
-    for episode in range(1, MAX_EPISODES + 1):
-        state = env.reset()
-        episode_reward = 0
-        done = 0
-
-        start_time = time.time()
-        while not done:
-            action = agent.choose_action(state)
-            next_state, reward, done, _ = env.step(action)
-            agent.store(state, reward, done, action, next_state)
-            value_loss, q_loss, policy_loss = agent.train()
-            if episode % 250 == 0:
-                agent.save_weights()
-            if done:
-                break
-            episode_reward += reward
-            state = next_state
-        log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, len(agent.memory))
+    # for episode in range(1, MAX_EPISODES + 1):
+    #     state = env.reset()
+    #     episode_reward = 0
+    #     done = 0
+    #
+    #     start_time = time.time()
+    #     for _ in range(env._max_episode_steps):
+    #         action = agent.choose_action(state)
+    #         next_state, reward, done, _ = env.step(action)
+    #         agent.store(state, reward, done, action, next_state)
+    #         value_loss, q_loss, policy_loss = agent.train()
+    #         if episode % 250 == 0:
+    #             agent.save_weights()
+    #         if done:
+    #             break
+    #         episode_reward += reward
+    #         state = next_state
+    #     log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, len(agent.memory))
 
     player = Play(env, agent)
     player.evaluate()
