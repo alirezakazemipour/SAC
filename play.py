@@ -25,6 +25,8 @@ class Play:
                 action = self.agent.choose_action(s)
                 s_, r, done, _ = self.env.step(action)
                 episode_reward += r
+                if done:
+                    break
                 s = s_
                 self.env.render(mode="human")
                 # time.sleep(0.03)

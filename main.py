@@ -72,24 +72,24 @@ if __name__ == "__main__":
                 action_bounds=action_bounds,
                 reward_scale=reward_scale)
 
-    for episode in range(1, MAX_EPISODES + 1):
-        state = env.reset()
-        episode_reward = 0
-        done = 0
-        start_time = time.time()
-        for step in range(MAX_STEPS):
-            action = agent.choose_action(state)
-            next_state, reward, done, _ = env.step(action)
-            done = False if step == env._max_episode_steps else done
-            agent.store(state, reward, done, action, next_state)
-            value_loss, q_loss, policy_loss = agent.train()
-            if episode % 250 == 0:
-                agent.save_weights()
-            if done or step == env._max_episode_steps:
-                break
-            episode_reward += reward
-            state = next_state
-        log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, len(agent.memory))
+    # for episode in range(1, MAX_EPISODES + 1):
+    #     state = env.reset()
+    #     episode_reward = 0
+    #     done = 0
+    #     start_time = time.time()
+    #     for step in range(MAX_STEPS):
+    #         action = agent.choose_action(state)
+    #         next_state, reward, done, _ = env.step(action)
+    #         done = False if step == env._max_episode_steps else done
+    #         agent.store(state, reward, done, action, next_state)
+    #         value_loss, q_loss, policy_loss = agent.train()
+    #         if episode % 250 == 0:
+    #             agent.save_weights()
+    #         if done or step == env._max_episode_steps:
+    #             break
+    #         episode_reward += reward
+    #         state = next_state
+    #     log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, len(agent.memory))
 
     player = Play(env, agent)
     player.evaluate()
