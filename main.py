@@ -15,6 +15,7 @@ n_actions = test_env.action_space.shape[0]
 action_bounds = [test_env.action_space.low[0], test_env.action_space.high[0]]
 
 MAX_EPISODES = 20000
+MAX_STEPS = 4000 * 100
 memory_size = 1e+6
 batch_size = 256
 gamma = 0.99
@@ -75,16 +76,16 @@ if __name__ == "__main__":
         state = env.reset()
         episode_reward = 0
         done = 0
-
         start_time = time.time()
-        for _ in range(env._max_episode_steps):
+        for step in range(MAX_STEPS):
             action = agent.choose_action(state)
             next_state, reward, done, _ = env.step(action)
+            done = False if step == env._max_episode_steps else done
             agent.store(state, reward, done, action, next_state)
             value_loss, q_loss, policy_loss = agent.train()
             if episode % 250 == 0:
                 agent.save_weights()
-            if done:
+            if done or step == env._max_episode_steps:
                 break
             episode_reward += reward
             state = next_state
