@@ -7,7 +7,9 @@ from torch.optim.adam import Adam
 
 
 class SAC:
-    def __init__(self, n_states, n_actions, memory_size, batch_size, gamma, alpha, lr, action_bounds, reward_scale):
+    def __init__(self, env_name, n_states, n_actions, memory_size,batch_size, gamma, alpha, lr, action_bounds,
+                 reward_scale):
+        self.env_name = env_name
         self.n_states = n_states
         self.n_actions = n_actions
         self.memory_size = memory_size
@@ -109,7 +111,7 @@ class SAC:
         states = np.expand_dims(states, axis=0)
         states = from_numpy(states).float().to(self.device)
         action, _ = self.policy_network.sample_or_likelihood(states)
-        return action.detach().cpu().numpy()[0]  # * self.action_bounds[1]
+        return action.detach().cpu().numpy()[0]
 
     @staticmethod
     def soft_update_target_network(local_network, target_network, tau=0.005):
@@ -117,10 +119,10 @@ class SAC:
             target_param.data.copy_(tau * local_param.data + (1 - tau) * target_param.data)
 
     def save_weights(self):
-        torch.save(self.policy_network.state_dict(), "./Humanoid_weights.pth")
+        torch.save(self.policy_network.state_dict(), self.env_name + "_weights.pth")
 
     def load_weights(self):
-        self.policy_network.load_state_dict(torch.load("./Humanoid_weights.pth"))
+        self.policy_network.load_state_dict(torch.load(self.env_name + "_weights.pth"))
 
     def set_to_eval_mode(self):
         self.policy_network.eval()
