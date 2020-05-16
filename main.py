@@ -6,8 +6,9 @@ import mujoco_py
 from torch.utils.tensorboard import SummaryWriter
 from play import Play
 import os
+import datetime
 
-ENV_NAME = "Humanoid-v2"
+ENV_NAME = "Walker2d-v2"
 test_env = gym.make(ENV_NAME)
 
 if not os.path.exists(ENV_NAME):
@@ -48,7 +49,8 @@ def log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, me
               f"Policy_Loss:{policy_loss:3.3f}| "
               f"Memory_length:{memory_length}| "
               f"Duration:{time.time() - start_time:3.3f}| "
-              f"{to_gb(ram.used):.1f}/{to_gb(ram.total):.1f} GB RAM")
+              f"{to_gb(ram.used):.1f}/{to_gb(ram.total):.1f} GB RAM| "
+              f'Time:{datetime.datetime.now().strftime("%H:%M:%S")}')
         agent.save_weights()
 
     with SummaryWriter(ENV_NAME + "/logs/") as writer:
