@@ -25,7 +25,7 @@ batch_size = 256
 gamma = 0.99
 alpha = 1
 lr = 3e-4
-reward_scale = 20
+reward_scale = 5
 
 to_gb = lambda in_bytes: in_bytes / 1024 / 1024 / 1024
 global_running_reward = 0
