@@ -19,7 +19,6 @@ n_actions = test_env.action_space.shape[0]
 action_bounds = [test_env.action_space.low[0], test_env.action_space.high[0]]
 
 MAX_EPISODES = 20000
-MAX_STEPS = 4000 * 100
 memory_size = 1e+6
 batch_size = 256
 gamma = 0.99
@@ -52,6 +51,8 @@ def log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, me
               f"{to_gb(ram.used):.1f}/{to_gb(ram.total):.1f} GB RAM| "
               f'Time:{datetime.datetime.now().strftime("%H:%M:%S")}')
         agent.save_weights()
+        if global_running_reward > 4300:
+            exit(0)
 
     with SummaryWriter(ENV_NAME + "/logs/") as writer:
         writer.add_scalar("Value Loss", value_loss, episode)
@@ -78,24 +79,21 @@ if __name__ == "__main__":
                 action_bounds=action_bounds,
                 reward_scale=reward_scale)
 
-    for episode in range(1, MAX_EPISODES + 1):
-        state = env.reset()
-        episode_reward = 0
-        done = 0
-        start_time = time.time()
-        for step in range(MAX_STEPS):
-            action = agent.choose_action(state)
-            next_state, reward, done, _ = env.step(action)
-            done = False if step == env._max_episode_steps else done
-            agent.store(state, reward, done, action, next_state)
-            value_loss, q_loss, policy_loss = agent.train()
-            if episode % 250 == 0:
-                agent.save_weights()
-            if done or step == env._max_episode_steps:
-                break
-            episode_reward += reward
-            state = next_state
-        log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, len(agent.memory))
+    # for episode in range(1, MAX_EPISODES + 1):
+    #     state = env.reset()
+    #     episode_reward = 0
+    #     done = 0
+    #     start_time = time.time()
+    #     while not done:
+    #         action = agent.choose_action(state)
+    #         next_state, reward, done, _ = env.step(action)
+    #         agent.store(state, reward, done, action, next_state)
+    #         value_loss, q_loss, policy_loss = agent.train()
+    #         if episode % 250 == 0:
+    #             agent.save_weights()
+    #         episode_reward += reward
+    #         state = next_state
+    #     log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, len(agent.memory))
 
-    player = Play(env, agent)
+    player = Play(env, agent, 100)
     player.evaluate()

@@ -111,6 +111,7 @@ class SAC:
         states = np.expand_dims(states, axis=0)
         states = from_numpy(states).float().to(self.device)
         action, _ = self.policy_network.sample_or_likelihood(states)
+        action = action
         return action.detach().cpu().numpy()[0]
 
     @staticmethod

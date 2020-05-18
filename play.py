@@ -2,6 +2,10 @@ import torch
 from torch import device
 import gym
 import time
+from mujoco_py.generated import const
+from mujoco_py import GlfwContext
+GlfwContext(offscreen=True)
+
 
 
 class Play:
@@ -28,5 +32,7 @@ class Play:
                     break
                 s = s_
                 self.env.render(mode="human")
+                self.env.viewer.cam.type = const.CAMERA_FIXED
+                self.env.viewer.cam.fixedcamid = 0
                 # time.sleep(0.03)
             print(f"episode reward:{episode_reward:3.3f}")
