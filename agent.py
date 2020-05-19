@@ -7,7 +7,7 @@ from torch.optim.adam import Adam
 
 
 class SAC:
-    def __init__(self, env_name, n_states, n_actions, memory_size,batch_size, gamma, alpha, lr, action_bounds,
+    def __init__(self, env_name, n_states, n_actions, memory_size, batch_size, gamma, alpha, lr, action_bounds,
                  reward_scale):
         self.env_name = env_name
         self.n_states = n_states
@@ -111,7 +111,6 @@ class SAC:
         states = np.expand_dims(states, axis=0)
         states = from_numpy(states).float().to(self.device)
         action, _ = self.policy_network.sample_or_likelihood(states)
-        action = action
         return action.detach().cpu().numpy()[0]
 
     @staticmethod

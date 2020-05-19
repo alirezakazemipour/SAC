@@ -8,7 +8,7 @@ from play import Play
 import os
 import datetime
 
-ENV_NAME = "Walker2d-v2"
+ENV_NAME = "Humanoid-v2"
 test_env = gym.make(ENV_NAME)
 
 if not os.path.exists(ENV_NAME):
@@ -24,7 +24,10 @@ batch_size = 256
 gamma = 0.99
 alpha = 1
 lr = 3e-4
-reward_scale = 5
+if ENV_NAME == "Humanoid-v2":
+    reward_scale = 20
+else:
+    reward_scale = 5
 
 to_gb = lambda in_bytes: in_bytes / 1024 / 1024 / 1024
 global_running_reward = 0
@@ -51,8 +54,7 @@ def log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, me
               f"{to_gb(ram.used):.1f}/{to_gb(ram.total):.1f} GB RAM| "
               f'Time:{datetime.datetime.now().strftime("%H:%M:%S")}')
         agent.save_weights()
-        if global_running_reward > 4300:
-            exit(0)
+
 
     with SummaryWriter(ENV_NAME + "/logs/") as writer:
         writer.add_scalar("Value Loss", value_loss, episode)
