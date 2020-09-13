@@ -8,7 +8,7 @@ from play import Play
 import os
 import datetime
 
-ENV_NAME = "Walker2d-v2"
+ENV_NAME = "Humanoid-v2"
 test_env = gym.make(ENV_NAME)
 TRAIN = False
 

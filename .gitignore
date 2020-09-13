@@ -22,7 +22,6 @@ Walker2d/logs/
 Humanoid/logs/
 vid/
 models/
-*.txt
 parts/
 sdist/
 var/

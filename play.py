@@ -5,7 +5,8 @@ import time
 from mujoco_py.generated import const
 from mujoco_py import GlfwContext
 GlfwContext(offscreen=True)
-
+# from pylab import *
+import cv2
 
 
 class Play:
@@ -31,8 +32,13 @@ class Play:
                 if done:
                     break
                 s = s_
-                self.env.render(mode="human")
-                self.env.viewer.cam.type = const.CAMERA_FIXED
-                self.env.viewer.cam.fixedcamid = 0
+                # self.env.render(mode="human")
+                # self.env.viewer.cam.type = const.CAMERA_FIXED
+                # self.env.viewer.cam.fixedcamid = 0
                 # time.sleep(0.03)
+                I = self.env.render(mode='rgb_array')
+                I = cv2.cvtColor(I, cv2.COLOR_RGB2BGR)
+                cv2.imshow("env", I)
+                # pause(1 / 120)
+                cv2.waitKey(10)
             print(f"episode reward:{episode_reward:3.3f}")
