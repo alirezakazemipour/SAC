@@ -8,8 +8,9 @@ from play import Play
 import os
 import datetime
 
-ENV_NAME = "Humanoid-v2"
+ENV_NAME = "Walker2d-v2"
 test_env = gym.make(ENV_NAME)
+TRAIN = False
 
 if not os.path.exists(ENV_NAME):
     os.mkdir(ENV_NAME)
@@ -81,6 +82,7 @@ if __name__ == "__main__":
                 action_bounds=action_bounds,
                 reward_scale=reward_scale)
 
+if TRAIN:
     for episode in range(1, MAX_EPISODES + 1):
         state = env.reset()
         episode_reward = 0
@@ -97,5 +99,6 @@ if __name__ == "__main__":
             state = next_state
         log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, len(agent.memory))
 
+else:
     player = Play(env, agent, 100)
     player.evaluate()
