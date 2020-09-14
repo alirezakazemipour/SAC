@@ -10,7 +10,7 @@ Humanoid-v2| Walker2d-v2| Hopper-v2
 ## Results
 Humanoid-v2| Walker2d-v2| Hopper-v2
 :-----------------------:|:-----------------------:|:-----------------------:|
-![](Result/Humanoid.png)| ![](Result/Walker2d.gif)| ![](Result/Hopper.gif)
+![](Result/Humanoid.png)| ![](Result/Walker2d.png)| ![](Result/Hopper.png)
 
 ## Dependencies
 - gym == 0.17.2  
