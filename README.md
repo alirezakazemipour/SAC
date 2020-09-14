@@ -2,8 +2,15 @@
 Implementation of Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor    
 >Added another branch for [Soft Actor-Critic Algorithms and Applications ](https://arxiv.org/pdf/1812.05905.pdf) -> [SAC_V1](https://github.com/alirezakazemipour/SAC/tree/SAV_V1).  
 
-## Demo
+## Demos
+Humanoid-v2| Walker2d-v2| Hopper-v2
+:-----------------------:|:-----------------------:|:-----------------------:|
+![](Result/Humanoid.gif)| ![](Result/Walker2d.gif)| ![](Result/Hopper.gif)
 
+## Results
+Humanoid-v2| Walker2d-v2| Hopper-v2
+:-----------------------:|:-----------------------:|:-----------------------:|
+![](Result/Humanoid.png)| ![](Result/Walker2d.gif)| ![](Result/Hopper.gif)
 
 ## Dependencies
 - gym == 0.17.2  

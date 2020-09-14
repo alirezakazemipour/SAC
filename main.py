@@ -8,7 +8,7 @@ from play import Play
 import os
 import datetime
 
-ENV_NAME = "Humanoid-v2"
+ENV_NAME = "Hopper-v2"
 test_env = gym.make(ENV_NAME)
 TRAIN = False
 
@@ -100,5 +100,5 @@ if TRAIN:
         log(episode, start_time, episode_reward, value_loss, q_loss, policy_loss, len(agent.memory))
 
 else:
-    player = Play(env, agent, 100)
+    player = Play(env, agent)
     player.evaluate()
