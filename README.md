@@ -4,7 +4,7 @@ Implementation of Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforceme
 
 Soft Q-Learning uses the following objective function instead of the conventional [expected cumulative return](http://www.cs.ox.ac.uk/people/varun.kanade/teaching/ML-HT2016/lectures/lec11.pdf):  
 <p align="center">
-<img src="https://bit.ly/3bX2auO" border="0" alt="J( \pi ) =  \sum_{t=0}^T  E_{( s_{t},  a_{t})  \sim{  \rho _{t} }} [r(s_{t},  a_{t}) +  \alpha H(.|s_{t})]" width="322" height="53" />   
+<img src="Result/soft_q_learning.jpg" border="0" alt="J( \pi ) =  \sum_{t=0}^T  E_{( s_{t},  a_{t})  \sim{  \rho _{t} }} [r(s_{t},  a_{t}) +  \alpha H(.|s_{t})]" width="322" height="53" />   
 </p>  
 The entropy term is also maximized which have two major benefits:
 
