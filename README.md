@@ -1,6 +1,6 @@
 # SAC
 Implementation of Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor    
->Added another branch for [Soft Actor-Critic Algorithms and Applications ](https://arxiv.org/pdf/1812.05905.pdf) -> [SAC_V1](https://github.com/alirezakazemipour/SAC/tree/SAV_V1).   
+>Added another branch for [Soft Actor-Critic Algorithms and Applications ](https://arxiv.org/pdf/1812.05905.pdf) -> [SAC_V1](https://github.com/alirezakazemipour/SAC/tree/SAC_V1).   
 
 Soft Q-Learning uses the following objective function instead of the conventional [expected cumulative return](http://www.cs.ox.ac.uk/people/varun.kanade/teaching/ML-HT2016/lectures/lec11.pdf):  
 <p align="center">
