@@ -86,6 +86,10 @@ class SAC:
             q2_loss = self.q_value_loss(q2, target_q)
 
             policy_loss = (self.alpha * log_probs - q).mean()
+            
+            self.policy_opt.zero_grad()
+            policy_loss.backward()
+            self.policy_opt.step()
 
             self.value_opt.zero_grad()
             value_loss.backward()
@@ -99,9 +103,6 @@ class SAC:
             q2_loss.backward()
             self.q_value2_opt.step()
 
-            self.policy_opt.zero_grad()
-            policy_loss.backward()
-            self.policy_opt.step()
 
             self.soft_update_target_network(self.value_network, self.value_target_network)
 
