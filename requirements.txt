@@ -4,5 +4,5 @@ gym~=0.15.6
 mujoco-py == 2.0.2.13
 numpy~=1.18.1
 psutil~=5.7.0
-torch == 1.4.0
+torch == 2.2.0
 opencv-python~=4.2.0.34
